@@ -1,0 +1,748 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>NewsVerifier | Real or Fake News Classification</title>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+    <style>
+        :root {
+            --primary: #ffcc00;
+            --primary-dark: #ff9900;
+            --secondary: #6c757d;
+            --dark: #0a0f1a;
+            --light: #f8f9fa;
+            --gradient-start: #141e30;
+            --gradient-end: #243b55;
+        }
+        
+        body {
+            font-family: 'Poppins', sans-serif;
+            background: linear-gradient(135deg, var(--gradient-start), var(--gradient-end));
+            color: var(--light);
+            margin: 0;
+            padding: 0;
+            min-height: 100vh;
+            overflow-x: hidden;
+        }
+        
+        .navbar {
+            background: rgba(10, 15, 26, 0.95);
+            backdrop-filter: blur(10px);
+            box-shadow: 0 2px 20px rgba(0, 0, 0, 0.3);
+            padding: 15px 0;
+            transition: all 0.3s ease;
+        }
+        
+        .navbar.scrolled {
+            padding: 10px 0;
+            background: rgba(10, 15, 26, 0.98);
+        }
+        
+        .navbar-brand {
+            font-weight: 700;
+            font-size: 1.5rem;
+            color: var(--primary) !important;
+            display: flex;
+            align-items: center;
+        }
+        
+        .navbar-brand i {
+            margin-right: 10px;
+            font-size: 1.3em;
+        }
+        
+        .nav-link {
+            color: rgba(255, 255, 255, 0.8) !important;
+            font-weight: 500;
+            margin: 0 10px;
+            padding: 8px 15px !important;
+            border-radius: 8px;
+            transition: all 0.3s ease;
+            position: relative;
+        }
+        
+        .nav-link:hover, .nav-link.active {
+            color: var(--primary) !important;
+            background: rgba(255, 204, 0, 0.1);
+        }
+        
+        .nav-link:after {
+            content: '';
+            position: absolute;
+            bottom: 0;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 0;
+            height: 2px;
+            background: var(--primary);
+            transition: width 0.3s ease;
+        }
+        
+        .nav-link:hover:after, .nav-link.active:after {
+            width: 60%;
+        }
+        
+        .banner {
+            background: linear-gradient(rgba(0, 0, 0, 0.7), rgba(0, 0, 0, 0.7)), 
+                        url('https://source.unsplash.com/1600x900/?news,media,journalism') no-repeat center center/cover;
+            height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            text-align: center;
+            color: white;
+            position: relative;
+            overflow: hidden;
+        }
+        
+        .banner-content {
+            max-width: 800px;
+            padding: 0 20px;
+            z-index: 2;
+        }
+        
+        .banner h1 {
+            font-size: 3.5rem;
+            font-weight: 700;
+            margin-bottom: 20px;
+            text-shadow: 0 5px 15px rgba(0, 0, 0, 0.3);
+            background: linear-gradient(90deg, var(--primary), #ff9900);
+            -webkit-background-clip: text;
+            background-clip: text;
+            color: transparent;
+            animation: fadeInUp 1s ease;
+        }
+        
+        .banner p {
+            font-size: 1.2rem;
+            margin-bottom: 30px;
+            opacity: 0.9;
+            animation: fadeInUp 1s ease 0.2s forwards;
+            opacity: 0;
+        }
+        
+        .banner .btn {
+            animation: fadeInUp 1s ease 0.4s forwards;
+            opacity: 0;
+        }
+        
+        @keyframes fadeInUp {
+            from {
+                opacity: 0;
+                transform: translateY(20px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+        
+        .particles {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            z-index: 1;
+        }
+        
+        section {
+            padding: 100px 0;
+            position: relative;
+        }
+        
+        .section-title {
+            font-weight: 700;
+            margin-bottom: 50px;
+            position: relative;
+            display: inline-block;
+        }
+        
+        .section-title:after {
+            content: '';
+            position: absolute;
+            bottom: -10px;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 80px;
+            height: 3px;
+            background: var(--primary);
+            border-radius: 3px;
+        }
+        
+        .container-box {
+            max-width: 1000px;
+            padding: 50px;
+            background: rgba(255, 255, 255, 0.05);
+            border-radius: 15px;
+            box-shadow: 0 15px 35px rgba(0, 0, 0, 0.2);
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            margin: auto;
+            transition: transform 0.3s ease, box-shadow 0.3s ease;
+        }
+        
+        .container-box:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.3);
+        }
+        
+        .form-select, .form-control {
+            background: rgba(255, 255, 255, 0.1);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            color: white;
+            padding: 12px 20px;
+            border-radius: 8px;
+            margin-bottom: 20px;
+            transition: all 0.3s ease;
+        }
+        
+        .form-select:focus, .form-control:focus {
+            background: rgba(255, 255, 255, 0.15);
+            border-color: var(--primary);
+            box-shadow: 0 0 0 0.25rem rgba(255, 204, 0, 0.25);
+            color: white;
+        }
+        
+        .form-select option {
+            background: var(--dark);
+        }
+        
+        .btn-custom {
+            background: var(--primary);
+            color: var(--dark);
+            font-weight: 600;
+            padding: 12px 30px;
+            border-radius: 8px;
+            border: none;
+            transition: all 0.3s ease;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            position: relative;
+            overflow: hidden;
+        }
+        
+        .btn-custom:hover {
+            background: var(--primary-dark);
+            color: var(--dark);
+            transform: translateY(-2px);
+            box-shadow: 0 10px 20px rgba(255, 153, 0, 0.3);
+        }
+        
+        .btn-custom:active {
+            transform: translateY(0);
+        }
+        
+        .list-group-item {
+            background: rgba(255, 255, 255, 0.05);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            color: white;
+            margin-bottom: 10px;
+            border-radius: 8px !important;
+            transition: all 0.3s ease;
+        }
+        
+        .list-group-item:hover {
+            background: rgba(255, 255, 255, 0.1);
+            transform: translateX(5px);
+        }
+        
+        .list-group-item a {
+            color: white;
+            text-decoration: none;
+            display: block;
+            transition: color 0.3s ease;
+        }
+        
+        .list-group-item:hover a {
+            color: var(--primary);
+        }
+        
+        .feature-box {
+            padding: 30px;
+            border-radius: 15px;
+            background: rgba(255, 255, 255, 0.05);
+            margin-bottom: 30px;
+            transition: all 0.3s ease;
+            height: 100%;
+            border: 1px solid rgba(255, 255, 255, 0.1);
+        }
+        
+        .feature-box:hover {
+            transform: translateY(-10px);
+            background: rgba(255, 255, 255, 0.1);
+            box-shadow: 0 15px 30px rgba(0, 0, 0, 0.2);
+        }
+        
+        .feature-icon {
+            font-size: 2.5rem;
+            color: var(--primary);
+            margin-bottom: 20px;
+        }
+        
+        footer {
+            background: rgba(10, 15, 26, 0.9);
+            padding: 30px 0;
+            text-align: center;
+            font-size: 0.9rem;
+            border-top: 1px solid rgba(255, 255, 255, 0.1);
+        }
+        
+        .social-icons a {
+            color: rgba(255, 255, 255, 0.7);
+            font-size: 1.2rem;
+            margin: 0 10px;
+            transition: all 0.3s ease;
+        }
+        
+        .social-icons a:hover {
+            color: var(--primary);
+            transform: translateY(-3px);
+        }
+        
+        /* Responsive adjustments */
+        @media (max-width: 768px) {
+            .banner h1 {
+                font-size: 2.5rem;
+            }
+            
+            .banner p {
+                font-size: 1rem;
+            }
+            
+            .container-box {
+                padding: 30px;
+            }
+            
+            section {
+                padding: 60px 0;
+            }
+        }
+        
+        /* Animation for list items */
+        @keyframes slideIn {
+            from {
+                opacity: 0;
+                transform: translateY(20px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+        
+        .animate-list li {
+            animation: slideIn 0.5s ease forwards;
+        }
+        
+        .animate-list li:nth-child(1) { animation-delay: 0.1s; }
+        .animate-list li:nth-child(2) { animation-delay: 0.2s; }
+        .animate-list li:nth-child(3) { animation-delay: 0.3s; }
+        .animate-list li:nth-child(4) { animation-delay: 0.4s; }
+        .animate-list li:nth-child(5) { animation-delay: 0.5s; }
+        .animate-list li:nth-child(6) { animation-delay: 0.6s; }
+        .animate-list li:nth-child(7) { animation-delay: 0.7s; }
+        .animate-list li:nth-child(8) { animation-delay: 0.8s; }
+        .animate-list li:nth-child(9) { animation-delay: 0.9s; }
+        .animate-list li:nth-child(10) { animation-delay: 1.0s; }
+        
+        /* Pulse animation for CTA */
+        @keyframes pulse {
+            0% { transform: scale(1); }
+            50% { transform: scale(1.05); }
+            100% { transform: scale(1); }
+        }
+        
+        .pulse {
+            animation: pulse 2s infinite;
+        }
+        
+        /* Tooltip styles */
+        .tooltip-inner {
+            background-color: var(--primary);
+            color: var(--dark);
+            font-weight: 500;
+            padding: 5px 10px;
+            border-radius: 6px;
+        }
+        
+        .bs-tooltip-auto[data-popper-placement^=top] .tooltip-arrow::before, 
+        .bs-tooltip-top .tooltip-arrow::before {
+            border-top-color: var(--primary);
+        }
+    </style>
+</head>
+<body>
+    <nav class="navbar navbar-expand-lg fixed-top">
+        <div class="container">
+            <a class="navbar-brand" href="#">
+                <i class="fas fa-newspaper"></i> NewsVerifier
+            </a>
+            <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav" aria-controls="navbarNav" aria-expanded="false" aria-label="Toggle navigation">
+                <i class="fas fa-bars" style="color: var(--primary);"></i>
+            </button>
+            <div class="collapse navbar-collapse" id="navbarNav">
+                <ul class="navbar-nav ms-auto">
+                    <li class="nav-item"><a class="nav-link active" href="#home"><i class="fas fa-home"></i> Home</a></li>
+                    <li class="nav-item"><a class="nav-link" href="#news"><i class="fas fa-list"></i> News Categories</a></li>
+                    <li class="nav-item"><a class="nav-link" href="#analyze"><i class="fas fa-search"></i> Analyze Content</a></li>
+                    <li class="nav-item"><a class="nav-link" href="#about"><i class="fas fa-info-circle"></i> About</a></li>
+                </ul>
+            </div>
+        </div>
+    </nav>
+
+    <section id="home" class="banner">
+        <div class="banner-content">
+            <h1>REAL OR FAKE NEWS CLASSIFIER</h1>
+            <p>Our advanced AI technology helps you distinguish between credible news and misinformation with just one click.</p>
+            <a href="#analyze" class="btn btn-custom pulse">Try It Now <i class="fas fa-arrow-right"></i></a>
+        </div>
+        <div class="particles" id="particles-js"></div>
+    </section>
+
+    <section id="news">
+        <div class="container">
+            <h2 class="text-center section-title">Explore News Categories</h2>
+            <div class="container-box">
+                <div class="row mb-4">
+                    <div class="col-md-8 mx-auto">
+                        <select id="subject" class="form-select" title="Select a news category to explore">
+                            <option value="">-- Select a News Category --</option>
+                            {% for sub in subjects %}
+                            <option value="{{ sub }}">{{ sub }}</option>
+                            {% endfor %}
+                        </select>
+                    </div>
+                </div>
+                
+                <h3 class="text-center mb-4">Latest News Headlines</h3>
+                <ul id="titles-list" class="list-group animate-list"></ul>
+            </div>
+        </div>
+    </section>
+
+    <section id="analyze">
+        <div class="container">
+            <h2 class="text-center section-title">Analyze News Content</h2>
+            <div class="container-box">
+                <div class="row justify-content-center">
+                    <div class="col-lg-8">
+                        <div class="mb-4">
+                            <label for="tweet-text" class="form-label">Enter news content or tweet to analyze:</label>
+                            <textarea id="tweet-text" class="form-control" rows="5" placeholder="Paste news article, tweet, or any text content here..."></textarea>
+                            <div class="d-flex justify-content-between mt-2">
+                                <small class="text-muted">Our AI will analyze the content for credibility indicators</small>
+                                <small><span id="char-count">0</span>/10000</small>
+                            </div>
+                        </div>
+                        <div class="text-center">
+                            <button id="analyze-btn" class="btn btn-custom btn-lg">
+                                <i class="fas fa-search me-2"></i> Analyze Now
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <section id="about">
+        <div class="container">
+            <h2 class="text-center section-title">How It Works</h2>
+            <div class="row">
+                <div class="col-md-4">
+                    <div class="feature-box">
+                        <div class="feature-icon">
+                            <i class="fas fa-brain"></i>
+                        </div>
+                        <h4>AI-Powered Analysis</h4>
+                        <p>Our advanced machine learning model evaluates multiple factors to determine content credibility with high accuracy.</p>
+                    </div>
+                </div>
+                <div class="col-md-4">
+                    <div class="feature-box">
+                        <div class="feature-icon">
+                            <i class="fas fa-bolt"></i>
+                        </div>
+                        <h4>Real-Time Results</h4>
+                        <p>Get instant verification results without waiting. Our system processes content in seconds.</p>
+                    </div>
+                </div>
+                <div class="col-md-4">
+                    <div class="feature-box">
+                        <div class="feature-icon">
+                            <i class="fas fa-shield-alt"></i>
+                        </div>
+                        <h4>Privacy Focused</h4>
+                        <p>We don't store your analyzed content. Your privacy is our top priority.</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <footer>
+        <div class="container">
+            <div class="social-icons mb-3">
+                <a href="#" title="Twitter"><i class="fab fa-twitter"></i></a>
+                <a href="#" title="Facebook"><i class="fab fa-facebook-f"></i></a>
+                <a href="#" title="LinkedIn"><i class="fab fa-linkedin-in"></i></a>
+                <a href="#" title="GitHub"><i class="fab fa-github"></i></a>
+            </div>
+            <p>&copy; 2023 NewsVerifier. All rights reserved.</p>
+            <p class="text-muted small">Helping fight misinformation one analysis at a time.</p>
+        </div>
+    </footer>
+
+    <script>
+        $(document).ready(function() {
+            // Navbar scroll effect
+            $(window).scroll(function() {
+                if ($(this).scrollTop() > 50) {
+                    $('.navbar').addClass('scrolled');
+                } else {
+                    $('.navbar').removeClass('scrolled');
+                }
+            });
+            
+            // Smooth scrolling for anchor links
+            $('a[href*="#"]').on('click', function(e) {
+                e.preventDefault();
+                $('html, body').animate(
+                    {
+                        scrollTop: $($(this).attr('href')).offset().top - 70,
+                    },
+                    500,
+                    'linear'
+                );
+            });
+            
+            // Update active nav link on scroll
+            $(window).scroll(function() {
+                var scrollDistance = $(window).scrollTop() + 100;
+                
+                $('section').each(function(i) {
+                    if ($(this).position().top <= scrollDistance) {
+                        $('.nav-link.active').removeClass('active');
+                        $('.nav-link').eq(i).addClass('active');
+                    }
+                });
+            }).scroll();
+            
+            // Character counter for textarea
+            $('#tweet-text').on('input', function() {
+                var count = $(this).val().length;
+                $('#char-count').text(count);
+                
+                if (count > 10000) {
+                    $('#char-count').css('color', '#ff6b6b');
+                } else {
+                    $('#char-count').css('color', 'inherit');
+                }
+            });
+            
+            // Subject selection handler
+            $("#subject").change(function() {
+                var subject = $(this).val();
+                if (subject) {
+                    $.post("/get_titles", { subject: subject }, function(data) {
+                        $("#titles-list").empty();
+                        if (data.titles && data.titles.length > 0) {
+                            data.titles.slice(0, 10).forEach((news, index) => {
+                                $("#titles-list").append(
+                                    `<li class="list-group-item" style="opacity: 0;">
+                                        <a href="/news/${encodeURIComponent(news.title)}">
+                                            <i class="fas fa-newspaper me-2" style="color: var(--primary);"></i>
+                                            ${news.title}
+                                        </a>
+                                    </li>`
+                                );
+                            });
+                            // Trigger animations
+                            $("#titles-list li").each(function(index) {
+                                $(this).css("animation-delay", (index * 0.1) + "s");
+                                $(this).css("opacity", 1);
+                            });
+                        } else {
+                            $("#titles-list").append(
+                                `<li class="list-group-item text-center text-muted">
+                                    No headlines found for this category
+                                </li>`
+                            );
+                        }
+                    }).fail(function() {
+                        $("#titles-list").empty().append(
+                            `<li class="list-group-item text-center text-danger">
+                                <i class="fas fa-exclamation-circle me-2"></i>
+                                Error loading headlines. Please try again.
+                            </li>`
+                        );
+                    });
+                } else {
+                    $("#titles-list").empty();
+                }
+            });
+            
+            // Analyze button handler
+            $("#analyze-btn").click(function() {
+                var tweet = $("#tweet-text").val().trim();
+                if (tweet === "") {
+                    // Show error tooltip
+                    var btn = $(this);
+                    btn.tooltip({title: "Please enter some text to analyze", placement: "top", trigger: "manual"});
+                    btn.tooltip('show');
+                    setTimeout(function() {
+                        btn.tooltip('hide');
+                    }, 2000);
+                    return;
+                }
+                
+                if (tweet.length > 10000) {
+                    // Show warning tooltip
+                    var btn = $(this);
+                    btn.tooltip({title: "Text is too long (max 10000 characters)", placement: "top", trigger: "manual"});
+                    btn.tooltip('show');
+                    setTimeout(function() {
+                        btn.tooltip('hide');
+                    }, 2000);
+                    return;
+                }
+                
+                // Add loading state
+                var originalText = $(this).html();
+                $(this).html('<span class="spinner-border spinner-border-sm me-2" role="status" aria-hidden="true"></span> Analyzing...');
+                $(this).prop('disabled', true);
+                
+                // Simulate API call (replace with actual AJAX call in production)
+                setTimeout(function() {
+                    window.location.href = "/check?text=" + encodeURIComponent(tweet);
+                    $("#analyze-btn").html(originalText).prop('disabled', false);
+                }, 1000);
+            });
+            
+            // Initialize tooltips
+            $('[title]').tooltip();
+        });
+    </script>
+
+    <!-- Particle.js for background effect -->
+    <script src="https://cdn.jsdelivr.net/particles.js/2.0.0/particles.min.js"></script>
+    <script>
+        // Initialize particles.js if the element exists
+        if (document.getElementById('particles-js')) {
+            particlesJS('particles-js', {
+                "particles": {
+                    "number": {
+                        "value": 80,
+                        "density": {
+                            "enable": true,
+                            "value_area": 800
+                        }
+                    },
+                    "color": {
+                        "value": "#ffcc00"
+                    },
+                    "shape": {
+                        "type": "circle",
+                        "stroke": {
+                            "width": 0,
+                            "color": "#000000"
+                        },
+                        "polygon": {
+                            "nb_sides": 5
+                        }
+                    },
+                    "opacity": {
+                        "value": 0.5,
+                        "random": false,
+                        "anim": {
+                            "enable": false,
+                            "speed": 1,
+                            "opacity_min": 0.1,
+                            "sync": false
+                        }
+                    },
+                    "size": {
+                        "value": 3,
+                        "random": true,
+                        "anim": {
+                            "enable": false,
+                            "speed": 40,
+                            "size_min": 0.1,
+                            "sync": false
+                        }
+                    },
+                    "line_linked": {
+                        "enable": true,
+                        "distance": 150,
+                        "color": "#ffcc00",
+                        "opacity": 0.4,
+                        "width": 1
+                    },
+                    "move": {
+                        "enable": true,
+                        "speed": 2,
+                        "direction": "none",
+                        "random": false,
+                        "straight": false,
+                        "out_mode": "out",
+                        "bounce": false,
+                        "attract": {
+                            "enable": false,
+                            "rotateX": 600,
+                            "rotateY": 1200
+                        }
+                    }
+                },
+                "interactivity": {
+                    "detect_on": "canvas",
+                    "events": {
+                        "onhover": {
+                            "enable": true,
+                            "mode": "grab"
+                        },
+                        "onclick": {
+                            "enable": true,
+                            "mode": "push"
+                        },
+                        "resize": true
+                    },
+                    "modes": {
+                        "grab": {
+                            "distance": 140,
+                            "line_linked": {
+                                "opacity": 1
+                            }
+                        },
+                        "bubble": {
+                            "distance": 400,
+                            "size": 40,
+                            "duration": 2,
+                            "opacity": 8,
+                            "speed": 3
+                        },
+                        "repulse": {
+                            "distance": 200,
+                            "duration": 0.4
+                        },
+                        "push": {
+                            "particles_nb": 4
+                        },
+                        "remove": {
+                            "particles_nb": 2
+                        }
+                    }
+                },
+                "retina_detect": true
+            });
+        }
+    </script>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+</body>
+</html>

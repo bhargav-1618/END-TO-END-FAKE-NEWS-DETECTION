@@ -1,0 +1,365 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>News Analysis Result | NewsVerifier</title>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --primary: #ffcc00;
+            --primary-dark: #ff9900;
+            --secondary: #6c757d;
+            --dark: #0a0f1a;
+            --light: #f8f9fa;
+            --gradient-start: #141e30;
+            --gradient-end: #243b55;
+            --success: #28a745;
+            --danger: #dc3545;
+            --warning: #fd7e14;
+            --info: #17a2b8;
+        }
+        
+        body {
+            font-family: 'Poppins', sans-serif;
+            background: linear-gradient(135deg, var(--gradient-start), var(--gradient-end));
+            color: white;
+            margin: 0;
+            padding: 0;
+            min-height: 100vh;
+        }
+        
+        .navbar {
+            background: rgba(10, 15, 26, 0.95);
+            backdrop-filter: blur(10px);
+            box-shadow: 0 2px 20px rgba(0, 0, 0, 0.3);
+            padding: 15px 0;
+        }
+        
+        .navbar-brand {
+            font-weight: 700;
+            font-size: 1.5rem;
+            color: var(--primary) !important;
+            display: flex;
+            align-items: center;
+        }
+        
+        .navbar-brand i {
+            margin-right: 10px;
+            font-size: 1.3em;
+        }
+        
+        .nav-link {
+            color: rgba(255, 255, 255, 0.8) !important;
+            font-weight: 500;
+            margin: 0 10px;
+            padding: 8px 15px !important;
+            border-radius: 8px;
+            transition: all 0.3s ease;
+        }
+        
+        .nav-link:hover, .nav-link.active {
+            color: var(--primary) !important;
+            background: rgba(255, 204, 0, 0.1);
+        }
+        
+        .analysis-container {
+            max-width: 900px;
+            margin: 100px auto 50px;
+            padding: 40px;
+            background: rgba(255, 255, 255, 0.05);
+            border-radius: 15px;
+            box-shadow: 0 15px 35px rgba(0, 0, 0, 0.2);
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            transition: transform 0.3s ease;
+        }
+        
+        .analysis-container:hover {
+            transform: translateY(-5px);
+        }
+        
+        .analysis-title {
+            font-size: 2.2rem;
+            font-weight: 700;
+            margin-bottom: 30px;
+            color: var(--primary);
+            text-align: center;
+            text-shadow: 0 2px 10px rgba(0, 0, 0, 0.3);
+        }
+        
+        .analysis-section {
+            padding: 25px;
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 10px;
+            margin-bottom: 30px;
+            border-left: 4px solid var(--primary);
+        }
+        
+        .section-title {
+            font-size: 1.5rem;
+            font-weight: 600;
+            margin-bottom: 20px;
+            color: var(--primary);
+            display: flex;
+            align-items: center;
+        }
+        
+        .section-title i {
+            margin-right: 10px;
+        }
+        
+        .verdict-badge {
+            display: inline-block;
+            padding: 8px 20px;
+            border-radius: 20px;
+            font-weight: 600;
+            font-size: 1rem;
+            margin-bottom: 15px;
+        }
+        
+        .verdict-real {
+            background: rgba(40, 167, 69, 0.2);
+            color: var(--success);
+            border: 1px solid var(--success);
+        }
+        
+        .verdict-fake {
+            background: rgba(220, 53, 69, 0.2);
+            color: var(--danger);
+            border: 1px solid var(--danger);
+        }
+        
+        .verdict-neutral {
+            background: rgba(253, 126, 20, 0.2);
+            color: var(--warning);
+            border: 1px solid var(--warning);
+        }
+        
+        .confidence-meter {
+            height: 10px;
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 5px;
+            margin: 20px 0;
+            overflow: hidden;
+        }
+        
+        .confidence-fill {
+            height: 100%;
+            background: linear-gradient(90deg, var(--success), var(--primary));
+        }
+        
+        .table-custom {
+            background: rgba(255, 255, 255, 0.05);
+            border-radius: 10px;
+            overflow: hidden;
+        }
+        
+        .table-custom thead {
+            background: rgba(255, 204, 0, 0.1);
+        }
+        
+        .table-custom th {
+            color: var(--primary);
+            font-weight: 500;
+        }
+        
+        .table-custom td, .table-custom th {
+            padding: 12px 15px;
+            border-color: rgba(255, 255, 255, 0.1);
+        }
+        
+        .table-custom tbody tr:hover {
+            background: rgba(255, 255, 255, 0.1);
+        }
+        
+        .chart-container {
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 10px;
+            padding: 20px;
+            margin: 30px 0;
+        }
+        
+        .btn-custom {
+            background: var(--primary);
+            color: var(--dark);
+            font-weight: 600;
+            padding: 12px 25px;
+            border-radius: 8px;
+            border: none;
+            transition: all 0.3s ease;
+            text-decoration: none;
+            display: inline-flex;
+            align-items: center;
+        }
+        
+        .btn-custom:hover {
+            background: var(--primary-dark);
+            color: var(--dark);
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(255, 153, 0, 0.3);
+        }
+        
+        .btn-custom i {
+            margin-right: 8px;
+        }
+        
+        footer {
+            background: rgba(10, 15, 26, 0.9);
+            padding: 30px 0;
+            text-align: center;
+            margin-top: 50px;
+            border-top: 1px solid rgba(255, 255, 255, 0.1);
+        }
+        
+        .social-icons a {
+            color: rgba(255, 255, 255, 0.7);
+            font-size: 1.2rem;
+            margin: 0 10px;
+            transition: all 0.3s ease;
+        }
+        
+        .social-icons a:hover {
+            color: var(--primary);
+            transform: translateY(-3px);
+        }
+        
+        @media (max-width: 768px) {
+            .analysis-container {
+                margin: 80px 20px 30px;
+                padding: 25px;
+            }
+            
+            .analysis-title {
+                font-size: 1.8rem;
+            }
+            
+            .section-title {
+                font-size: 1.3rem;
+            }
+        }
+    </style>
+</head>
+<body>
+    <nav class="navbar navbar-expand-lg fixed-top">
+        <div class="container">
+            <a class="navbar-brand" href="/">
+                <i class="fas fa-newspaper"></i> NewsVerifier
+            </a>
+            <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
+                <i class="fas fa-bars"></i>
+            </button>
+            <div class="collapse navbar-collapse" id="navbarNav">
+                <ul class="navbar-nav ms-auto">
+                    <li class="nav-item"><a class="nav-link" href="/"><i class="fas fa-home"></i> Home</a></li>
+                    <li class="nav-item"><a class="nav-link" href="/analyze"><i class="fas fa-search"></i> Analyze</a></li>
+                    <li class="nav-item"><a class="nav-link active" href="#"><i class="fas fa-chart-bar"></i> Results</a></li>
+                </ul>
+            </div>
+        </div>
+    </nav>
+
+    <div class="container analysis-container">
+        <h1 class="analysis-title">News Analysis Result</h1>
+        
+        <!-- Sentiment Analysis Section -->
+        <div class="analysis-section">
+            <h2 class="section-title">
+                <i class="fas fa-smile"></i> Sentiment Analysis
+            </h2>
+            <div class="verdict-badge verdict-{% if sentiment == 'Positive' %}real{% elif sentiment == 'Negative' %}fake{% else %}neutral{% endif %}">
+                <i class="fas fa-{% if sentiment == 'Positive' %}smile{% elif sentiment == 'Negative' %}frown{% else %}meh{% endif %}"></i>
+                {{ sentiment }} Sentiment
+            </div>
+            <p class="mb-0">The sentiment analysis indicates this content has a <strong>{{ sentiment.lower() }}</strong> tone.</p>
+        </div>
+        
+        <!-- Fake News Classification Section -->
+        <div class="analysis-section">
+            <h2 class="section-title">
+                <i class="fas fa-check-circle"></i> Credibility Assessment
+            </h2>
+            <div class="verdict-badge verdict-{% if classification == 'REAL NEWS' %}real{% else %}fake{% endif %}">
+                <i class="fas fa-{% if classification == 'REAL NEWS' %}check-circle{% else %}times-circle{% endif %}"></i>
+                {{ classification }} 
+            </div>
+            <p>Our analysis indicates this content is <strong>{{ classification.lower() }}</strong> with a confidence level of:</p>
+            
+            <div class="confidence-meter">
+                <div class="confidence-fill" style="width: {{ confidence|round(2) }}%"></div>
+            </div>
+            <p class="text-end"><strong>{{ confidence|round(2) }}%</strong> confidence</p>
+        </div>
+        
+        <!-- Named Entity Recognition Section -->
+        <div class="analysis-section">
+            <h2 class="section-title">
+                <i class="fas fa-tags"></i> Named Entity Recognition
+            </h2>
+            
+            {% if entities %}
+                <p>The following entities were identified in the content:</p>
+                <div class="table-responsive">
+                    <table class="table table-dark table-custom">
+                        <thead>
+                            <tr>
+                                <th><i class="fas fa-font"></i> Entity</th>
+                                <th><i class="fas fa-tag"></i> Type</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for entity, label in entities %}
+                                <tr>
+                                    <td>{{ entity }}</td>
+                                    <td>
+                                        <span class="badge bg-{% if label == 'PERSON' %}primary{% elif label == 'ORG' %}info{% elif label == 'GPE' %}success{% else %}secondary{% endif %}">
+                                            {{ label }}
+                                        </span>
+                                    </td>
+                                </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            {% else %}
+                <p>No named entities were identified in this content.</p>
+            {% endif %}
+        </div>
+        
+        <!-- Entity Distribution Chart -->
+        <div class="analysis-section">
+            <h2 class="section-title">
+                <i class="fas fa-chart-pie"></i> Entity Distribution
+            </h2>
+            <div class="chart-container">
+                <img src="{{ url_for('static', filename='ner_chart.png') }}" alt="NER Entity Distribution" class="img-fluid rounded">
+            </div>
+            <p class="text-muted">Visual representation of entity types found in the content.</p>
+        </div>
+        
+        <div class="text-center mt-4">
+            <a href="/" class="btn btn-custom">
+                <i class="fas fa-home"></i> Back to Home
+            </a>
+        </div>
+    </div>
+
+    <footer>
+        <div class="container">
+            <div class="social-icons mb-3">
+                <a href="#"><i class="fab fa-twitter"></i></a>
+                <a href="#"><i class="fab fa-facebook"></i></a>
+                <a href="#"><i class="fab fa-linkedin"></i></a>
+                <a href="#"><i class="fab fa-github"></i></a>
+            </div>
+            <p>&copy; 2023 NewsVerifier. All rights reserved.</p>
+            <p class="text-muted small">Helping fight misinformation one analysis at a time.</p>
+        </div>
+    </footer>
+
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+</body>
+</html>
